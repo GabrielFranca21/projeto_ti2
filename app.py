@@ -9,6 +9,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://queirozs01_add2:biel2015@mysql.
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+user = ""
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,7 +72,7 @@ def create_project():
 @app.route('/dashboard')
 def dashboard():
     # Lógica para exibir o painel de controle
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', user=user)
 
 if __name__ == '__main__':
     app.run(debug=True)

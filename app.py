@@ -17,7 +17,14 @@ class User(db.Model):
     name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
+    
     cep = db.Column(db.String(9))
+    rua = db.Column(db.String(100))
+    bairro = db.Column(db.String(100))
+    cidade = db.Column(db.String(100))
+    estado = db.Column(db.String(100))
+    complemento = db.Column(db.String(15))
+    
 # Rotas para as páginas
 @app.route('/')
 def index():
@@ -31,22 +38,27 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        cep = request.form['cep_input']
-        if not valida_cep():
-            flash('Cep invalido!')
-            return render_template('register.html',cep=cep)
-        else:
-            if password != confirm_password:
-                return render_template('register.html', error='As senhas não coincidem.')
-
+        if password != confirm_password:
+            new_user = User(name=name, email=email, password=hashed_password,cep=cep,rua=rua,bairro=bairro,cidade=cidade,estado=estado,complemento=complemento)
+            
             hashed_password = generate_password_hash(password, method='sha256')
+            return render_template('register.html', error='As senhas não coincidem.')
+        
+        cep = request.form['cep']
+        rua = request.form['rua']
+        complemento = request.form['complemento']
+        estado = request.form['estado']
+        cidade = request.form['cidade']
+        bairro = request.form['bairro']
+            
+            
+        
+        
+        new_user = User(name=name, email=email, password=hashed_password,cep=cep,rua=rua,bairro=bairro,cidade=cidade,estado=estado,complemento=complemento)
+        db.session.add(new_user)
+        db.session.commit()
 
-            new_user = User(name=name, email=email, password=hashed_password)
-
-            db.session.add(new_user)
-            db.session.commit()
-
-            return redirect(url_for('login'))
+        return redirect(url_for('/login'))
 
     return render_template('register.html')
 
@@ -79,25 +91,11 @@ def dashboard():
     # Lógica para exibir o painel de controle
     return render_template('dashboard.html', user=user)
 
-def valida_cep():
-    user.cep = request.form['cep']
-    request = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep_fornecido))
 
+def recupera_cep(cep):
+    request = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep))
     address_data = request.json()
-    if 'error' not in address_data:
-        cep = address_data['cep'] = request.form['cep']
-        logradouro = address_data['logradouro'] = request.form['rua']
-        bairro = address_data['bairro'] = request.form['bairro']
-        cidade = address_data['localidade'] = request.form['cidade']
-        estado = address_data['estado'] = request.form['estado']
-        uf = address_data['uf'] = request.form['uf']
-        cursor = db.cursor()
-        cursor.execute("INSERT INTO carros (cep, rua, bairro, cidade, estado,uf) VALUES (%s, %s, %s, %s, %s,%s)", (cep, logradouro, bairro, cidade, estado,uf))
-        db.commit()
-
-    else:
-        flash('CEP inválido.')
-        re
+    
         
 if __name__ == '__main__':
     app.run(debug=True)

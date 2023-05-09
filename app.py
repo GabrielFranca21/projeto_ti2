@@ -17,7 +17,7 @@ class User(db.Model):
     name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
-
+    cep = db.Column(db.String(9))
 # Rotas para as páginas
 @app.route('/')
 def index():
@@ -31,9 +31,10 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-        cep = request.form['cep']
+        cep = request.form['cep_input']
         if not valida_cep():
             flash('Cep invalido!')
+            return render_template('register.html',cep=cep)
         else:
             if password != confirm_password:
                 return render_template('register.html', error='As senhas não coincidem.')
@@ -79,21 +80,24 @@ def dashboard():
     return render_template('dashboard.html', user=user)
 
 def valida_cep():
-    request = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep_input))
+    user.cep = request.form['cep']
+    request = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep_fornecido))
 
     address_data = request.json()
     if 'error' not in address_data:
-        print('===> CEP ENCONTRADO <==')
-        print()
-        print('CEP: {}'.format(address_data['cep']))
-        print('LOGRADOURO: {}'.format(address_data['logradouro']))
-        print('BAIRRO: {}'.format(address_data['bairro']))
-        print('CIDADE: {}'.format(address_data['localidade']))
-        print('ESTADO: {}'.format(address_data['uf']))
-        print('COMPLEMENTO: {}'.format(address_data['complemento']))
+        cep = address_data['cep'] = request.form['cep']
+        logradouro = address_data['logradouro'] = request.form['rua']
+        bairro = address_data['bairro'] = request.form['bairro']
+        cidade = address_data['localidade'] = request.form['cidade']
+        estado = address_data['estado'] = request.form['estado']
+        uf = address_data['uf'] = request.form['uf']
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO carros (cep, rua, bairro, cidade, estado,uf) VALUES (%s, %s, %s, %s, %s,%s)", (cep, logradouro, bairro, cidade, estado,uf))
+        db.commit()
 
     else:
         flash('CEP inválido.')
+        re
         
 if __name__ == '__main__':
     app.run(debug=True)

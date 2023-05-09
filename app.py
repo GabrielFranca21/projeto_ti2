@@ -32,18 +32,20 @@ def register():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         cep = request.form['cep']
+        if not valida_cep():
+            flash('Cep invalido!')
+        else:
+            if password != confirm_password:
+                return render_template('register.html', error='As senhas não coincidem.')
 
-        if password != confirm_password:
-            return render_template('register.html', error='As senhas não coincidem.')
+            hashed_password = generate_password_hash(password, method='sha256')
 
-        hashed_password = generate_password_hash(password, method='sha256')
+            new_user = User(name=name, email=email, password=hashed_password)
 
-        new_user = User(name=name, email=email, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
 
-        db.session.add(new_user)
-        db.session.commit()
-
-        return redirect(url_for('login'))
+            return redirect(url_for('login'))
 
     return render_template('register.html')
 

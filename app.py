@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for,flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mysecretkey'
@@ -30,6 +31,7 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
+        cep = request.form['cep']
 
         if password != confirm_password:
             return render_template('register.html', error='As senhas não coincidem.')
@@ -74,5 +76,22 @@ def dashboard():
     # Lógica para exibir o painel de controle
     return render_template('dashboard.html', user=user)
 
+def valida_cep():
+    request = requests.get('https://viacep.com.br/ws/{}/json/'.format(cep_input))
+
+    address_data = request.json()
+    if 'error' not in address_data:
+        print('===> CEP ENCONTRADO <==')
+        print()
+        print('CEP: {}'.format(address_data['cep']))
+        print('LOGRADOURO: {}'.format(address_data['logradouro']))
+        print('BAIRRO: {}'.format(address_data['bairro']))
+        print('CIDADE: {}'.format(address_data['localidade']))
+        print('ESTADO: {}'.format(address_data['uf']))
+        print('COMPLEMENTO: {}'.format(address_data['complemento']))
+
+    else:
+        flash('CEP inválido.')
+        
 if __name__ == '__main__':
     app.run(debug=True)
